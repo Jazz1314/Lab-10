@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Wikipedia</string>
+    <string name="no_articles_could_be_found">No articles found</string>
+    <string name="fetching_the_list">Loading, please wait…</string>
+    <string name="get_started">Search for a topic</string>
+    <string name="new_window_icon">New Window Icon</string>
+    <string name="wiki_icon">Result Icon</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
