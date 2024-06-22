@@ -6,42 +6,39 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 
-import androidx.lifecycle.Observer
+import android.widget.Toast
 
+import androidx.appcompat.widget.SearchView
+
+import androidx.lifecycle.Observer
+import androidx.navigation.fragment.findNavController
 import com.crp.wikiAppNew.databinding.FragmentSearchBinding
+
+
+import com.crp.wikiAppNew.utils.Helper
 import com.crp.wikiAppNew.view.State
 import com.crp.wikiAppNew.view.WikiAdapter
 import com.crp.wikiAppNew.viewmodel.WikiViewModel
-
-
-import androidx.appcompat.widget.SearchView
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-
 class SearchFragment : Fragment() {
-
-
-    private val viewModel: WikiViewModel by viewModel()// Reference to the ViewModel
-    private lateinit var binding: FragmentSearchBinding // ViewBinding for the fragment's layout
+    private lateinit var binding: FragmentSearchBinding
+    private val viewModel: WikiViewModel by viewModel()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         binding = FragmentSearchBinding.inflate(inflater, container, false)
-        val view = binding.root
-        return view
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Setup SearchView
-        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
+        binding.searchNow.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                if (query != null) {
-                    viewModel.getWikiData(query)
-                }
+                query?.let { callSearchApi(it) }
                 return true
             }
 
@@ -50,40 +47,47 @@ class SearchFragment : Fragment() {
             }
         })
 
-        // Observe ViewModel's LiveData to update UI
-        viewModel.postsLiveData.observe(viewLifecycleOwner, Observer { state ->
+        viewModel.postsLiveData.observe(viewLifecycleOwner, { state ->
             when (state) {
                 is State.Loading -> {
-                    binding.progressBar.visibility = View.VISIBLE
-                    binding.wikiRv.visibility = View.GONE
-                    binding.noDataState.visibility = View.GONE
+                    loadingState(true)
                 }
                 is State.Success -> {
-                    binding.progressBar.visibility = View.GONE
-                    binding.wikiRv.visibility = View.VISIBLE
-                    binding.noDataState.visibility = View.GONE
-
-                    val articles = state.data.query?.pages ?: emptyList()
-                    val adapter = WikiAdapter(articles) { url ->
-                        val fragmentTransaction = requireFragmentManager().beginTransaction()
-                        val wikiDetailFragment = WebViewFragment.newInstance(url.toString())
-                        fragmentTransaction.replace(R.id.fragment_container, wikiDetailFragment)
-                        fragmentTransaction.addToBackStack(null) // Optional: add to backstack
-                        fragmentTransaction.commit()
+                    loadingState(false)
+                    binding.wikiRv.adapter = state.data.query?.pages?.let {
+                        WikiAdapter(it) { articleTitle -> openArticle(articleTitle.toString()) }
                     }
-                    binding.wikiRv.adapter = adapter
                 }
                 is State.Error -> {
-                    binding.progressBar.visibility = View.GONE
-                    binding.wikiRv.visibility = View.GONE
+                    loadingState(false)
                     binding.noDataState.visibility = View.VISIBLE
                 }
             }
         })
     }
 
-    companion object {
-        fun newInstance() = SearchFragment()
+    private fun openArticle(articleTitle: String) {
+        val articleFragment = WebViewFragment.newInstance(articleTitle)
+        val transaction = requireActivity().supportFragmentManager.beginTransaction()
+        transaction.replace(R.id.fragment_container, articleFragment)
+        transaction.addToBackStack(null)  // Para poder navegar hacia atrás
+        transaction.commit()
     }
 
+    private fun loadingState(isLoading: Boolean) {
+        if (isLoading) {
+            binding.loadingState.visibility = View.VISIBLE
+            binding.noDataState.visibility = View.GONE
+        } else {
+            Helper.hideKeyboard(requireActivity())
+            binding.loadingState.visibility = View.GONE
+        }
+    }
+
+    private fun callSearchApi(searchString: String) {
+        if (Helper.isNetworkAvailable(requireContext()))
+            viewModel.getWikiData(searchString)
+        else
+            Toast.makeText(requireContext(), "No Internet Connection", Toast.LENGTH_SHORT).show()
+    }
 }
