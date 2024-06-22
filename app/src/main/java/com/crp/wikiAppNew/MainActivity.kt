@@ -28,10 +28,7 @@ class MainActivity : AppCompatActivity() {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
     }
 
-    private val viewModel: WikiViewModel by viewModel()
-
     private lateinit var binding: ActivityMainBinding
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -47,58 +44,14 @@ class MainActivity : AppCompatActivity() {
             startLocationService()
         }
 
-        binding.searchNow.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                query?.let { callSearchApi(it) }
-                return true
-            }
-
-            override fun onQueryTextChange(newText: String?): Boolean {
-                return false
-            }
-
-        })
-
-
-        viewModel.postsLiveData.observe(this, Observer { state ->
-            when (state) {
-                is State.Loading -> {
-                    loadingState(true)
-                }
-                is State.Success -> {
-                    loadingState(false)
-                    binding.wikiRv.adapter =
-                        state.data.query?.pages?.let { WikiAdapter(it) { it1 -> openBrowser(it1 as String) } }
-                }
-                is State.Error -> {
-                    loadingState(false)
-                    binding.noDataState.visibility = VISIBLE
-                }
-            }
-        })
-    }
-
-    private fun openBrowser(string: String) = startActivity(
-        Intent(Intent.ACTION_VIEW, Uri.parse("https://en.wikipedia.org/wiki/$string"))
-    )
-
-
-    private fun loadingState(isLoading: Boolean) {
-        if (isLoading) {
-            binding.loadingState.visibility = VISIBLE
-            binding.defaultState.visibility = GONE
-            binding.noDataState.visibility = GONE
-        } else {
-            Helper.hideKeyboard(this)
-            binding.loadingState.visibility = GONE
+        // Call the SearchFragment
+        if (savedInstanceState == null) {
+            val fragmentManager = supportFragmentManager
+            val fragmentTransaction = fragmentManager.beginTransaction()
+            val searchFragment = SearchFragment.newInstance()
+            fragmentTransaction.replace(R.id.fragment_container, searchFragment) // Replace with your container ID
+            fragmentTransaction.commit()
         }
-    }
-
-    fun callSearchApi(searchString: String) {
-        if (Helper.isNetworkAvailable(this))
-            viewModel.getWikiData(searchString)
-        else
-            Toast.makeText(this, "No Internet Connection", Toast.LENGTH_SHORT).show()
     }
 
 
