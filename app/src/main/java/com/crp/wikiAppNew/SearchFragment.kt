@@ -55,7 +55,7 @@ class SearchFragment : Fragment() {
                 is State.Success -> {
                     loadingState(false)
                     binding.wikiRv.adapter = state.data.query?.pages?.let {
-                        WikiAdapter(it) { articleTitle -> openArticle(articleTitle.toString()) }
+                        WikiAdapter(it) { url -> openArticle(url.toString()) }
                     }
                 }
                 is State.Error -> {
@@ -66,8 +66,8 @@ class SearchFragment : Fragment() {
         })
     }
 
-    private fun openArticle(articleTitle: String) {
-        val articleFragment = WebViewFragment.newInstance(articleTitle)
+    private fun openArticle(url: String) {
+        val articleFragment = WebViewFragment.newInstance(url)
         val transaction = requireActivity().supportFragmentManager.beginTransaction()
         transaction.replace(R.id.fragment_container, articleFragment)
         transaction.addToBackStack(null)  // Para poder navegar hacia atrás
@@ -89,5 +89,9 @@ class SearchFragment : Fragment() {
             viewModel.getWikiData(searchString)
         else
             Toast.makeText(requireContext(), "No Internet Connection", Toast.LENGTH_SHORT).show()
+    }
+
+    companion object {
+        fun newInstance() = SearchFragment()
     }
 }

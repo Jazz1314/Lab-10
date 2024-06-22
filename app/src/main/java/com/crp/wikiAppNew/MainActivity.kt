@@ -22,7 +22,7 @@ import com.crp.wikiAppNew.viewmodel.WikiViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 
-
+import com.crp.wikiAppNew.SearchFragment
 class MainActivity : AppCompatActivity() {
 
     companion object {
@@ -35,6 +35,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        if (savedInstanceState == null) {
+            val fragmentManager = supportFragmentManager
+            val fragmentTransaction = fragmentManager.beginTransaction()
+            val searchFragment = SearchFragment.newInstance()
+            fragmentTransaction.replace(R.id.fragment_container, searchFragment) // Reemplaza con tu ID de contenedor
+            fragmentTransaction.commit()
+        }
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(

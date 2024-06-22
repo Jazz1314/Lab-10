@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import coil.api.load
 import com.crp.wikiAppNew.databinding.WikiSearchItemBinding
 import com.crp.wikiAppNew.datamodel.Page
+import java.net.URLEncoder
 
 class WikiAdapter(private val list: List<Page>, val adapterOnClick: (Any) -> Unit) :
     RecyclerView.Adapter<WikiAdapter.WikiView>() {
@@ -19,7 +20,9 @@ class WikiAdapter(private val list: List<Page>, val adapterOnClick: (Any) -> Uni
             binding.itemLogo.load(page.thumbnail?.source)
 
             binding.root.setOnClickListener {
-                page.title?.let { it1 -> adapterOnClick(it1) }
+                val encodedTitle = URLEncoder.encode(page.title, "UTF-8")
+                val url = "https://en.wikipedia.org/wiki/$encodedTitle"
+                adapterOnClick(url)
             }
         }
     }
